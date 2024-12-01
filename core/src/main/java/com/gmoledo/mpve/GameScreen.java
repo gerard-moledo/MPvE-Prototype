@@ -16,6 +16,8 @@ public class GameScreen extends ScreenAdapter {
     }
 
     public void render(float delta) {
-        ScreenUtils.clear(Color.RED);
+        ScreenUtils.clear(Color.GREEN);
+
+        board.draw();
     }
 }
