@@ -7,9 +7,11 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 public class GameScreen extends ScreenAdapter {
+    Board board;
     Controller controller;
 
     GameScreen() {
+        board = new Board(5);
         controller = Controllers.getCurrent();
     }
 
