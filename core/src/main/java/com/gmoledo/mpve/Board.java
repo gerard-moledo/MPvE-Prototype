@@ -1,25 +1,24 @@
 package com.gmoledo.mpve;
 
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class Board {
-    List<List<Cell>> board;
-    int field_size;
-    final int HOME_SIZE = 3;
+final public class Board {
+    static List<List<Cell>> board;
+    static int field_size;
+    static final int HOME_SIZE = 3;
 
-    Board(int field_size) {
-        this.field_size = field_size;
+    static public void Instantiate(int field_size) {
+        Board.field_size = field_size;
 
         create_board();
     }
 
-    private void create_board() {
+    static private void create_board() {
         // Allocate space for entire board and fill with empty contents
-        final int MAX_SIZE = (this.field_size + HOME_SIZE * 2) * 2;
+        final int MAX_SIZE = (field_size + HOME_SIZE * 2) * 2;
         final int ARRAY_OFFSET = MAX_SIZE / 2;
+
         board = new ArrayList<>();
         for (int i = 0; i < MAX_SIZE; ++i) {
             board.add(new ArrayList<>());
@@ -29,7 +28,7 @@ public class Board {
         }
 
         // Create board: Field (hex-shaped grid with side length this.field_size)
-        int field_index = this.field_size - 1;
+        int field_index = field_size - 1;
         for (int q = -field_index; q <= field_index; ++q) { // Generate grid based on qr-coordinates
             for (int r = Math.max(-field_index - q, -field_index); r <= Math.min(field_index - q, field_index); ++r) {
                 // q and r must be converted to positive indices for array access
@@ -38,11 +37,11 @@ public class Board {
         }
 
         // Create board: Bases (player and opponent home bases, HOME_SIZE wide)
-        int base_index = this.field_size + 2;
+        int base_index = field_size + 2;
         for (int dq = -3; dq <= 3; ++dq) {
             if (dq == 0) continue; // Bases are only indexed left and right (negative and positive)
 
-            int q = (this.field_size - 1) * (int) Math.signum(dq) + dq; // Do the math
+            int q = (field_size - 1) * (int) Math.signum(dq) + dq; // Do the math
             for (int r = 0; r * -Math.signum(dq) < base_index; r += (int) -Math.signum(dq)) {
                 if (Math.abs(dq) == 3 && r == 0) continue;
                 if (Math.abs(dq) == 1 && Math.abs(r) == base_index - 1) continue;
@@ -54,17 +53,20 @@ public class Board {
         }
     }
 
-    public void draw(ShapeRenderer renderer) {
-        renderer.setAutoShapeType(true);
-        renderer.begin();
+    // Convert raw q and r coordinates to array-accessible coordinates
+    static public boolean get_index(int q, int r) {
+        final int MAX_SIZE = board.size();
 
-        for (List<Cell> cells : board) {
+        return board.get(q + MAX_SIZE / 2) != null && board.get(q + MAX_SIZE / 2).get(r + MAX_SIZE / 2) != null;
+    }
+
+    static public void draw() {
+        for (List<Cell> cells : Board.board) {
             for (Cell cell : cells) {
                 if (cell != null) {
                     cell.draw();
                 }
             }
         }
-        renderer.end();
     }
 }

@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g2d.PolygonRegion;
 import com.badlogic.gdx.graphics.g2d.PolygonSprite;
 import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 
 public class Cell {
@@ -24,15 +23,12 @@ public class Cell {
 
     PolygonSprite sprite;
     PolygonSpriteBatch batch;
-    ShapeRenderer renderer;
 
     Cell(Type type, int q, int r) {
         this.type = type;
 
         this.q = 0;
         this.r = 0;
-
-        renderer = new ShapeRenderer();
 
         create_hexagon_batch();
         translate(q, r);
@@ -41,8 +37,8 @@ public class Cell {
     public void translate(int dq, int dr) {
         q += dq;
         r += dr;
-        Vector2 position = calculate_position(q, r);
 
+        Vector2 position = calculate_position(q, r);
         this.x = position.x;
         this.y = position.y;
         sprite.setPosition(this.x, this.y);
