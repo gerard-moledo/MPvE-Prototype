@@ -58,6 +58,7 @@ public class Cell {
         sprite = new PolygonSprite(region);
         batch = new PolygonSpriteBatch();
 
+        // Set rendering properties for cell
         Color color = Color.BLACK;
         switch (type) {
             case field:    color = Color.WHITE;  break;
