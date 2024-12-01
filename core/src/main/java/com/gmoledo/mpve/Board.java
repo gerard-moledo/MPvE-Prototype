@@ -1,8 +1,6 @@
 package com.gmoledo.mpve;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Vector2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,14 +9,9 @@ public class Board {
     List<List<Cell>> board;
     int field_size;
     final int HOME_SIZE = 3;
-    static final float CELL_RADIUS = 40f;
-
-    ShapeRenderer renderer;
 
     Board(int field_size) {
         this.field_size = field_size;
-
-        this.renderer = new ShapeRenderer();
 
         create_board();
     }
@@ -39,10 +32,8 @@ public class Board {
         int field_index = this.field_size - 1;
         for (int q = -field_index; q <= field_index; ++q) { // Generate grid based on qr-coordinates
             for (int r = Math.max(-field_index - q, -field_index); r <= Math.min(field_index - q, field_index); ++r) {
-                Vector2 position = calculate_position(q, r);
-
                 // q and r must be converted to positive indices for array access
-                board.get(q + ARRAY_OFFSET).set(r + ARRAY_OFFSET, new Cell(Cell.Type.field, position.x, position.y));
+                board.get(q + ARRAY_OFFSET).set(r + ARRAY_OFFSET, new Cell(Cell.Type.field, q, r));
             }
         }
 
@@ -56,16 +47,14 @@ public class Board {
                 if (Math.abs(dq) == 3 && r == 0) continue;
                 if (Math.abs(dq) == 1 && Math.abs(r) == base_index - 1) continue;
 
-                Vector2 position = calculate_position(q, r);
-
                 // q and r must be converted to positive indices for array access
-                Cell.Type base_type = dq < 0 ? Cell.Type.player : Cell.Type.opponent;
-                board.get(q + ARRAY_OFFSET).set(r + ARRAY_OFFSET, new Cell(base_type, position.x, position.y));
+                Cell.Type base_type = dq < 0 ? Cell.Type.player_base : Cell.Type.opponent_base;
+                board.get(q + ARRAY_OFFSET).set(r + ARRAY_OFFSET, new Cell(base_type, q, r));
             }
         }
     }
 
-    public void draw() {
+    public void draw(ShapeRenderer renderer) {
         renderer.setAutoShapeType(true);
         renderer.begin();
 
@@ -77,13 +66,5 @@ public class Board {
             }
         }
         renderer.end();
-    }
-
-    private Vector2 calculate_position(int q, int r) {
-        float offset = CELL_RADIUS * (float) Math.sqrt(3) / 2;
-        float x = q * CELL_RADIUS * 3 / 2 + Gdx.graphics.getWidth() / 2f;
-        float y = -r * CELL_RADIUS * (float) Math.sqrt(3) + -q * offset + Gdx.graphics.getHeight() / 2f;
-
-        return new Vector2(x, y);
     }
 }
