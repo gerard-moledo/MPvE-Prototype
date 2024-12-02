@@ -96,7 +96,7 @@ public class Player {
         troop = new Troop(type, shape, q, r);
     }
 
-    static public void Initialize_Controller(Controller controller) {
+    static public boolean Initialize_Controller(Controller controller) {
         Player.controller = controller;
         if (controller != null) {
             Player.controller.addListener(controller_listener);
@@ -106,14 +106,15 @@ public class Player {
             Player.buttons.put(L_TRIGGER, new Button());
             Player.buttons.put(R_TRIGGER, new Button());
         }
+
+        return controller != null;
     }
 
     public void update(float delta) {
         if (controller == null) {
-            controller = Controllers.getCurrent();
+            boolean success = Initialize_Controller(Controllers.getCurrent());
 
-            if (controller != null) controller.addListener(controller_listener);
-            else return;
+            if (!success) return;
         }
 
         // ==================================

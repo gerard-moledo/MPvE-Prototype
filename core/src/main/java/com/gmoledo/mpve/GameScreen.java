@@ -16,7 +16,8 @@ public class GameScreen extends ScreenAdapter {
 
     GameScreen() {
         Board.Instantiate(5);
-        Player.Initialize_Controller(Controllers.getCurrent());
+        boolean success = Player.Initialize_Controller(Controllers.getCurrent());
+        if (!success) System.out.println("No controller connected.");
 
         player = new Player(Cell.Type.player, Troop.Shape.single);
         opponent = new Player(Cell.Type.opponent, Troop.Shape.single);
