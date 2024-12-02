@@ -14,7 +14,7 @@ public class Player {
     float move_delay = 0.2f;
     float sensitivity = 0.7f;
 
-    Player(Cell.Type type, Troop.Shape shape) {
+    Player(Cell.Type type, Shape.Type shape) {
         // Start in appropriate agent's base
         int q = type == Cell.Type.player ? -Board.field_size - 1 : Board.field_size + 1;
         int r = type == Cell.Type.player ? Board.field_size / 2 + 1 : -Board.field_size / 2 - 1;
