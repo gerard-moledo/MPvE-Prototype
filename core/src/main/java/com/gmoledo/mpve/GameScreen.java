@@ -14,7 +14,7 @@ public class GameScreen extends ScreenAdapter {
     GameScreen() {
         Board.Instantiate(5);
         // Controller initialization my fail if no controller is connected
-        boolean success = Player.Initialize_Controller(Controllers.getCurrent());
+        boolean success = Input_System.Initialize_Controller(Controllers.getCurrent());
         if (!success) System.out.println("No controller connected.");
 
         player = new Player(Cell.Type.player, Troop.Shape.single);
@@ -32,7 +32,7 @@ public class GameScreen extends ScreenAdapter {
         opponent.update(delta);
 
         // Reset per-frame inputs
-        for (Map.Entry<Integer, Player.Button> button : Player.buttons.entrySet()) {
+        for (Map.Entry<Integer, Input_System.Button> button : Input_System.buttons.entrySet()) {
             button.getValue().pressed = false;
             button.getValue().released = false;
         }

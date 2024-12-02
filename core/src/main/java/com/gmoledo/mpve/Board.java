@@ -18,7 +18,6 @@ final public class Board {
         // Allocate space for entire board and fill with empty contents
         final int MAX_SIZE = (field_size + HOME_SIZE * 2) * 2;
         final int ARRAY_OFFSET = MAX_SIZE / 2;
-
         board = new ArrayList<>();
         for (int i = 0; i < MAX_SIZE; ++i) {
             board.add(new ArrayList<>());
