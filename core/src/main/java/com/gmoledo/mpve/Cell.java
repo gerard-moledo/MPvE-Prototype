@@ -34,16 +34,6 @@ public class Cell {
         translate(q, r);
     }
 
-    public void translate(int dq, int dr) {
-        q += dq;
-        r += dr;
-
-        Vector2 position = calculate_position(q, r);
-        this.x = position.x;
-        this.y = position.y;
-        sprite.setPosition(this.x, this.y);
-    }
-
     private void create_hexagon_batch() {
         batch = new PolygonSpriteBatch();
 
@@ -82,6 +72,16 @@ public class Cell {
             case opponent_base: color = Color.RED; break;
         }
         sprite.setColor(color);
+        sprite.setPosition(this.x, this.y);
+    }
+
+    public void translate(int dq, int dr) {
+        q += dq;
+        r += dr;
+
+        Vector2 position = calculate_position(q, r);
+        this.x = position.x;
+        this.y = position.y;
         sprite.setPosition(this.x, this.y);
     }
 

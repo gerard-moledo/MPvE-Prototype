@@ -1,88 +1,12 @@
 package com.gmoledo.mpve;
 
 import com.badlogic.gdx.controllers.Controller;
-import com.badlogic.gdx.controllers.ControllerAdapter;
-import com.badlogic.gdx.controllers.ControllerListener;
 import com.badlogic.gdx.controllers.Controllers;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class Player {
-    static class Button {
-        boolean pressed = false;
-        boolean down = false;
-        boolean released = false;
-        boolean up = true;
-    }
-    static Map<Integer, Button> buttons = new HashMap<>();
-    final static int L_TRIGGER = 4;
-    final static int R_TRIGGER = 5;
-    static Controller controller;
-    static ControllerListener controller_listener = new ControllerAdapter() {
-        @Override
-        public void connected(Controller controller) {
-            System.out.println("Controller connected.");
-
-            Player.Initialize_Controller(controller);
-        }
-
-        @Override
-        public void disconnected(Controller controller) {
-            System.out.println("Controller disconnected.");
-        }
-
-        @Override
-        public boolean buttonDown(Controller controller, int buttonCode) {
-            Button button = Player.buttons.get(buttonCode);
-
-            if (button.up) {
-                button.pressed = true;
-                button.down = true;
-            }
-
-            Player.buttons.replace(buttonCode, button);
-            return false;
-        }
-
-        @Override
-        public boolean buttonUp(Controller controller, int buttonCode) {
-            Button button = Player.buttons.get(buttonCode);
-            if (button == null) return false;
-
-            if (button.down) {
-                button.down = false;
-
-                button.released = true;
-                button.up = true;
-            }
-
-            Player.buttons.replace(buttonCode, button);
-            return false;
-        }
-
-        @Override
-        public boolean axisMoved(Controller controller, int axisIndex, float value) {
-            Button button = Player.buttons.get(axisIndex);
-            if (button == null) return false;
-
-            if (value > 0.6f) {
-                if (!button.down) button.pressed = true;
-                button.down = true;
-            }
-            if (value < 0.01f){
-                button.down = false;
-
-                button.released = true;
-                button.up = true;
-            }
-
-            Player.buttons.replace(axisIndex, button);
-            return super.axisMoved(controller, axisIndex, value);
-        }
-    };
-
     Troop troop;
+
+    Controller controller;
 
     // Movement timing fields
     float move_xt = 0.0f;
@@ -91,42 +15,40 @@ public class Player {
     float sensitivity = 0.7f;
 
     Player(Cell.Type type, Troop.Shape shape) {
+        // Start in appropriate agent's base
         int q = type == Cell.Type.player ? -Board.field_size - 1 : Board.field_size + 1;
         int r = type == Cell.Type.player ? Board.field_size / 2 + 1 : -Board.field_size / 2 - 1;
         troop = new Troop(type, shape, q, r);
+
+        try_connect_controller();
     }
 
-    static public boolean Initialize_Controller(Controller controller) {
-        Player.controller = controller;
-        if (controller != null) {
-            Player.controller.addListener(controller_listener);
+    // Helper function to check if controller is connected
+    private boolean try_connect_controller() {
+        boolean success = true;
 
-            Player.buttons.put(controller.getMapping().buttonL1, new Button());
-            Player.buttons.put(controller.getMapping().buttonR1, new Button());
-            Player.buttons.put(L_TRIGGER, new Button());
-            Player.buttons.put(R_TRIGGER, new Button());
+        if (Input_System.controller == null) {
+            success = Input_System.Initialize_Controller(Controllers.getCurrent());
+
+            if (success) controller = Input_System.controller;
         }
 
-        return controller != null;
+        return success;
     }
 
     public void update(float delta) {
-        if (controller == null) {
-            boolean success = Initialize_Controller(Controllers.getCurrent());
-
-            if (!success) return;
-        }
+        if (!try_connect_controller()) return;
 
         // ==================================
         // SHAPE TOGGLING
         // ==================================
         int L_button_code = troop.cell_type == Cell.Type.player ?
-                                     controller.getMapping().buttonL1 : L_TRIGGER;
+                                     controller.getMapping().buttonL1 : Input_System.L_TRIGGER;
         int R_button_code = troop.cell_type == Cell.Type.player ?
-                                     controller.getMapping().buttonR1 : R_TRIGGER;
+                                     controller.getMapping().buttonR1 : Input_System.R_TRIGGER;
 
-        Button L_button = Player.buttons.get(L_button_code);
-        Button R_button = Player.buttons.get(R_button_code);
+        Input_System.Button L_button = Input_System.buttons.get(L_button_code);
+        Input_System.Button R_button = Input_System.buttons.get(R_button_code);
         if (L_button.pressed) {
             troop.toggle_shape(-1);
         }
