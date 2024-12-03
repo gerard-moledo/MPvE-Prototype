@@ -48,6 +48,11 @@ public class Troop {
         boolean success = check_is_in_bounds(new_cells);
         if (success) {
             this.cells = new_cells;
+            if (!check_can_place()) {
+                for (Cell cell : this.cells) {
+                    cell.change_enabled(false);
+                }
+            }
         }
 
         return success;
@@ -65,27 +70,57 @@ public class Troop {
             this.cells = new_cells;
             this.q += dq;
             this.r += dr;
+
+            if (!check_can_place() || !check_is_in_territory()) {
+                for (Cell cell : this.cells) {
+                    cell.change_enabled(false);
+                }
+            }
         }
     }
 
     public void place() {
-        for (Cell cell : this.cells) {
-            Board.get(cell.q, cell.r).change_type(cell.get_compliment());
+        if (check_can_place()) {
+            for (Cell cell : this.cells) {
+                cell.change_enabled(false);
+                Board.get(cell.q, cell.r).change_type(cell.get_compliment());
+            }
         }
+    }
+
+    public boolean check_can_place() {
+        boolean is_place_fail = false;
+
+        if (!check_is_in_territory()) return is_place_fail;
+
+        for (Cell cell : this.cells) {
+            Cell board_cell = Board.get(cell.q, cell.r);
+            if (board_cell == null || board_cell.type == cell.get_compliment()) {
+                is_place_fail = true;
+            }
+        }
+
+        return !is_place_fail;
     }
 
     // Restrict movement to board
     private boolean check_is_in_bounds(List<Cell> cells) {
-        boolean is_move_fail = false;
-        boolean is_out_of_territory = false;
+        boolean is_move_fail = true;
         for (Cell cell : cells) {
             Cell board_cell = Board.get(cell.q, cell.r);
-            if (board_cell == null) {
-                is_move_fail = true;
+            if (board_cell != null) {
+                is_move_fail = false;
                 break;
             }
+        }
 
-            // If code executes, board cell exists
+        return !is_move_fail;
+    }
+
+    private boolean check_is_in_territory() {
+        boolean is_out_of_territory = false;
+
+        for (Cell cell : cells) {
             boolean is_bordering = check_surrounding_cells(cell);
             if (!is_bordering) {
                 is_out_of_territory = true;
@@ -93,9 +128,7 @@ public class Troop {
             }
         }
 
-        if (is_out_of_territory) is_move_fail = true;
-
-        return !is_move_fail;
+        return !is_out_of_territory;
     }
 
     private boolean check_surrounding_cells(Cell cell) {

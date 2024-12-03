@@ -46,7 +46,7 @@ final public class Board {
                 if (Math.abs(dq) == 1 && Math.abs(r) == base_index - 1) continue;
 
                 // q and r must be converted to positive indices for array access
-                Cell.Type base_type = dq < 0 ? Cell.Type.player_base : Cell.Type.opponent_base;
+                Cell.Type base_type = dq < 0 ? Cell.Type.player_territory : Cell.Type.opponent_territory;
                 board.get(q + ARRAY_OFFSET).set(r + ARRAY_OFFSET, new Cell(base_type, q, r));
             }
         }

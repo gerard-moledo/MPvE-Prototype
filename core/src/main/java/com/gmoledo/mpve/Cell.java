@@ -11,7 +11,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 
 public class Cell {
-    public enum Type { field, player_base, player, opponent_base, opponent }
+    public enum Type { field, player, player_territory, player_troop, opponent, opponent_territory, opponent_troop }
     Type type;
     Type compliment;
 
@@ -21,6 +21,8 @@ public class Cell {
     int r;
     float x;
     float y;
+
+    boolean placeable = true;
 
     PolygonSprite sprite;
     PolygonSpriteBatch batch;
@@ -41,10 +43,8 @@ public class Cell {
     public Type get_compliment() {
         Type compliment = Type.field;
 
-        if (this.type == Type.player)           compliment = Type.player_base;
-        if (this.type == Type.player_base)      compliment = Type.player;
-        if (this.type == Type.opponent)         compliment = Type.opponent_base;
-        if (this.type == Type.opponent_base)    compliment = Type.opponent;
+        if (this.type == Type.player)   compliment = Type.player_troop;
+        if (this.type == Type.opponent) compliment = Type.opponent_troop;
 
         return compliment;
     }
@@ -97,33 +97,41 @@ public class Cell {
     }
 
     public boolean compare_territory(Cell other) {
-        boolean is_same_territory = false;
-
-        if (this.type == Type.player && (other.type == Type.player || other.type == Type.player_base) ||
-            this.type == Type.player_base && (other.type == Type.player || other.type == Type.player_base))
-            is_same_territory = true;
-
-        if (this.type == Type.opponent && (other.type == Type.opponent || other.type == Type.opponent_base) ||
-            this.type == Type.opponent_base && (other.type == Type.opponent || other.type == Type.opponent_base))
-            is_same_territory = true;
-
-        return is_same_territory;
+        return this.type == Type.player && (other.type == Type.player_troop || other.type == Type.player_territory) ||
+            this.type == Type.opponent && (other.type == Type.opponent_troop || other.type == Type.opponent_territory);
     }
 
     public void change_type(Type new_type) {
         this.type = new_type;
-
-        // Set rendering properties for cell
-        Color color = Color.BLACK;
-        switch (this.type) {
-            case field:         color = Color.WHITE; break;
-            case player:        color = new Color(Integer.reverseBytes(Color.YELLOW.toIntBits() & 0xccffffff)); break;
-            case player_base:   color = Color.CYAN; break;
-            case opponent:      color = new Color(Integer.reverseBytes(Color.ORANGE.toIntBits() & 0xccffffff)); break;
-            case opponent_base: color = Color.RED; break;
-        }
-        sprite.setColor(color);
+        change_color();
     }
+
+    public void change_enabled(boolean is_enabled) {
+        this.placeable = is_enabled;
+        change_color();
+    }
+
+        public void change_color() {
+            Color color = Color.BLACK;
+
+            switch (this.type) {
+                case field:                 color = Color.WHITE; break;
+                case player:                color = new Color(Integer.reverseBytes(Color.YELLOW.toIntBits() & 0xccffffff)); break;
+                case player_troop:          color = new Color(0x0077ffff); break;
+                case player_territory:      color = Color.CYAN; break;
+                case opponent:              color = new Color(Integer.reverseBytes(Color.ORANGE.toIntBits() & 0xccffffff)); break;
+                case opponent_troop:        color = Color.RED; break;
+                case opponent_territory:    color = new Color(0xff7777ff); break;
+            }
+
+            if (this.type == Type.player || this.type == Type.opponent) {
+                if (!this.placeable) {
+                    color.set(0x585858bd);
+                }
+            }
+
+            sprite.setColor(color);
+        }
 
     public void draw() {
         batch.begin();
