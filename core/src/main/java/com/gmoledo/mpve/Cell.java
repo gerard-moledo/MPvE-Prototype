@@ -93,6 +93,20 @@ public class Cell {
         return new Vector2(x, y);
     }
 
+    public boolean compare_territory(Cell other) {
+        boolean is_same_territory = false;
+
+        if (this.type == Type.player && (other.type == Type.player || other.type == Type.player_base) ||
+            this.type == Type.player_base && (other.type == Type.player || other.type == Type.player_base))
+            is_same_territory = true;
+
+        if (this.type == Type.opponent && (other.type == Type.opponent || other.type == Type.opponent_base) ||
+            this.type == Type.opponent_base && (other.type == Type.opponent || other.type == Type.opponent_base))
+            is_same_territory = true;
+
+        return is_same_territory;
+    }
+
     public void draw() {
         batch.begin();
 

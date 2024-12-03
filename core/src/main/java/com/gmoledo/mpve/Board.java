@@ -53,10 +53,13 @@ final public class Board {
     }
 
     // Convert raw q and r coordinates to array-accessible coordinates
-    static public boolean get_index(int q, int r) {
+    static public Cell get(int q, int r) {
+        Cell cell = null;
         final int MAX_SIZE = board.size();
-
-        return board.get(q + MAX_SIZE / 2) != null && board.get(q + MAX_SIZE / 2).get(r + MAX_SIZE / 2) != null;
+        if (board.get(q + MAX_SIZE / 2) != null) {
+            cell = board.get(q + MAX_SIZE / 2).get(r + MAX_SIZE / 2);
+        }
+        return cell;
     }
 
     static public void draw() {

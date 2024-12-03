@@ -52,6 +52,7 @@ class Controller_Input implements ControllerListener {
     @Override
     public boolean buttonDown(Controller controller, int buttonCode) {
         Input_System.Button button = Input_System.buttons.get(buttonCode);
+        if (button == null) return false;
 
         if (button.up) {
             button.up = false;

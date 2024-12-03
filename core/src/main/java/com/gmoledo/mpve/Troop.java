@@ -70,14 +70,45 @@ public class Troop {
     // Restrict movement to board
     private boolean check_is_in_bounds(List<Cell> cells) {
         boolean is_move_fail = false;
+        boolean is_out_of_territory = false;
         for (Cell cell : cells) {
-            if (!Board.get_index(cell.q, cell.r)) {
+            Cell board_cell = Board.get(cell.q, cell.r);
+            if (board_cell == null) {
                 is_move_fail = true;
+                break;
+            }
+
+            // If code executes, board cell exists
+            boolean is_bordering = check_surrounding_cells(cell);
+            if (!is_bordering) {
+                is_out_of_territory = true;
                 break;
             }
         }
 
+        if (is_out_of_territory) is_move_fail = true;
+
         return !is_move_fail;
+    }
+
+    private boolean check_surrounding_cells(Cell cell) {
+        boolean is_neighboring_territory = false;
+
+        for (int dq = -1; dq <= 1; ++dq) {
+            for (int dr = -1; dr <= 1; ++dr) {
+                if (Math.abs(dq + dr) <= 1) {
+                    Cell neighbor = Board.get(cell.q + dq, cell.r + dr);
+                    if (neighbor != null && cell.compare_territory(neighbor)) {
+                        is_neighboring_territory = true;
+                        break;
+                    }
+                }
+            }
+
+            if (is_neighboring_territory) break;
+        }
+
+        return is_neighboring_territory;
     }
 
     public void draw() {
