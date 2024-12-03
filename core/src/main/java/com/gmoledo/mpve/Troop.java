@@ -21,6 +21,7 @@ public class Troop {
 
         this.shape = shape;
         this.cell_type = cell_type;
+
         update_shape();
     }
 
@@ -64,6 +65,12 @@ public class Troop {
             this.cells = new_cells;
             this.q += dq;
             this.r += dr;
+        }
+    }
+
+    public void place() {
+        for (Cell cell : this.cells) {
+            Board.get(cell.q, cell.r).change_type(cell.get_compliment());
         }
     }
 

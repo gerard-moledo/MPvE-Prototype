@@ -8,16 +8,21 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import java.util.Map;
 
 public class GameScreen extends ScreenAdapter {
-    Player player;
-    Player opponent;
+    static Player player;
+    static Player opponent;
 
     GameScreen() {
         // Controller initialization my fail if no controller is connected
         boolean success = Input_System.Initialize_Controller(Controllers.getCurrent());
         if (!success) System.out.println("No controller connected.");
 
-        Board.Instantiate(5);
         Shape.Initialize();
+
+        start_game();
+    }
+
+    static public void start_game() {
+        Board.Instantiate(5);
 
         player = new Player(Cell.Type.player, Shape.Type.single);
         opponent = new Player(Cell.Type.opponent, Shape.Type.single);

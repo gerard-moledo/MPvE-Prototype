@@ -39,6 +39,10 @@ public class Player {
     public void update(float delta) {
         if (!try_connect_controller()) return;
 
+        if (Input_System.buttons.get(controller.getMapping().buttonStart).pressed) {
+            GameScreen.start_game();
+        }
+
         // ==================================
         // SHAPE TOGGLING
         // ==================================
@@ -89,6 +93,20 @@ public class Player {
             }
         } else { move_yt = move_delay; }
         // ========== MOVEMENT LOGIC ==========
+
+        // ====================================
+        // TROOP PLACEMENT
+        // ====================================
+        int place_button_code = troop.cell_type == Cell.Type.player ?
+                                controller.getMapping().buttonA : controller.getMapping().buttonDpadDown;
+
+        Input_System.Button place_button = Input_System.buttons.get(place_button_code);
+        if (place_button == null) System.out.println("Button not registered");
+
+        if (place_button != null && place_button.pressed) {
+            troop.place();
+        }
+
     }
 
     public void draw() {

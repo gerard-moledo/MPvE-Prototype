@@ -31,6 +31,9 @@ final public class Input_System {
             buttons.put(controller.getMapping().buttonR1, new Button());
             buttons.put(L_TRIGGER, new Button());
             buttons.put(R_TRIGGER, new Button());
+            buttons.put(controller.getMapping().buttonA, new Button());
+            buttons.put(controller.getMapping().buttonDpadDown, new Button());
+            buttons.put(controller.getMapping().buttonStart, new Button());
         }
 
         return controller != null;
@@ -83,7 +86,9 @@ class Controller_Input implements ControllerListener {
 
     @Override
     public boolean axisMoved(Controller controller, int axisIndex, float value) {
-        Input_System.Button button = Input_System.buttons.get(axisIndex);
+        Input_System.Button button = null;
+        if (axisIndex == 4 || axisIndex == 5)
+            button = Input_System.buttons.get(axisIndex);
         if (button == null) return false;
 
         if (value > 0.6f) {

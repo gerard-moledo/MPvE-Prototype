@@ -11,8 +11,9 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 
 public class Cell {
-    enum Type { field, player_base, player, opponent_base, opponent }
+    public enum Type { field, player_base, player, opponent_base, opponent }
     Type type;
+    Type compliment;
 
     static final float CELL_RADIUS = 30f;
 
@@ -26,12 +27,26 @@ public class Cell {
 
     Cell(Type type, int q, int r) {
         this.type = type;
+        this.compliment = get_compliment();
 
         this.q = 0;
         this.r = 0;
 
         create_hexagon_batch();
+        change_type(this.type);
+
         translate(q, r);
+    }
+
+    public Type get_compliment() {
+        Type compliment = Type.field;
+
+        if (this.type == Type.player)           compliment = Type.player_base;
+        if (this.type == Type.player_base)      compliment = Type.player;
+        if (this.type == Type.opponent)         compliment = Type.opponent_base;
+        if (this.type == Type.opponent_base)    compliment = Type.opponent;
+
+        return compliment;
     }
 
     private void create_hexagon_batch() {
@@ -61,25 +76,13 @@ public class Cell {
 
         sprite = new PolygonSprite(region);
         batch = new PolygonSpriteBatch();
-
-        // Set rendering properties for cell
-        Color color = Color.BLACK;
-        switch (type) {
-            case field:         color = Color.WHITE; break;
-            case player:        color = new Color(Integer.reverseBytes(Color.YELLOW.toIntBits() & 0xccffffff)); break;
-            case player_base:   color = Color.CYAN; break;
-            case opponent:      color = new Color(Integer.reverseBytes(Color.ORANGE.toIntBits() & 0xccffffff)); break;
-            case opponent_base: color = Color.RED; break;
-        }
-        sprite.setColor(color);
-        sprite.setPosition(this.x, this.y);
     }
 
     public void translate(int dq, int dr) {
-        q += dq;
-        r += dr;
+        this.q += dq;
+        this.r += dr;
 
-        Vector2 position = calculate_position(q, r);
+        Vector2 position = calculate_position(this.q, this.r);
         this.x = position.x;
         this.y = position.y;
         sprite.setPosition(this.x, this.y);
@@ -105,6 +108,21 @@ public class Cell {
             is_same_territory = true;
 
         return is_same_territory;
+    }
+
+    public void change_type(Type new_type) {
+        this.type = new_type;
+
+        // Set rendering properties for cell
+        Color color = Color.BLACK;
+        switch (this.type) {
+            case field:         color = Color.WHITE; break;
+            case player:        color = new Color(Integer.reverseBytes(Color.YELLOW.toIntBits() & 0xccffffff)); break;
+            case player_base:   color = Color.CYAN; break;
+            case opponent:      color = new Color(Integer.reverseBytes(Color.ORANGE.toIntBits() & 0xccffffff)); break;
+            case opponent_base: color = Color.RED; break;
+        }
+        sprite.setColor(color);
     }
 
     public void draw() {
