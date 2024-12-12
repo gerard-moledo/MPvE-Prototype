@@ -21,15 +21,20 @@ public class Cell {
     int r;
     float x;
     float y;
+    float radius;
 
     boolean placeable = true;
 
     PolygonSprite sprite;
     PolygonSpriteBatch batch;
 
-    Cell(Type type, int q, int r) {
+    Cell(Type type, int q, int r, float radius) {
         this.type = type;
         this.compliment = get_compliment();
+
+        this.radius = radius;
+        if (this.radius == 0.0f)
+            this.radius = CELL_RADIUS;
 
         this.q = 0;
         this.r = 0;
@@ -62,7 +67,7 @@ public class Cell {
 
         // Provide hexagon vertices/indices for sprite
         float[] vertices = new float[14];
-        float radius = CELL_RADIUS * 0.95f; // Shrink radius to add space between cells
+        float radius = this.radius * 0.95f; // Shrink radius to add space between cells
         for (int v = 0; v < 14; v += 2) {
             vertices[v + 0] = radius * (float) Math.sin(2 * Math.PI * v / 12f + Math.PI / 6);
             vertices[v + 1] = radius * (float) Math.cos(2 * Math.PI * v / 12f + Math.PI / 6);
@@ -76,6 +81,12 @@ public class Cell {
 
         sprite = new PolygonSprite(region);
         batch = new PolygonSpriteBatch();
+    }
+
+    public void set_absolute_position(float x, float y) {
+        this.x = x;
+        this.y = y;
+        sprite.setPosition(this.x, this.y);
     }
 
     public void translate(int dq, int dr) {
@@ -111,27 +122,27 @@ public class Cell {
         change_color();
     }
 
-        public void change_color() {
-            Color color = Color.BLACK;
+    public void change_color() {
+        Color color = Color.BLACK;
 
-            switch (this.type) {
-                case field:                 color = Color.WHITE; break;
-                case player:                color = new Color(Integer.reverseBytes(Color.YELLOW.toIntBits() & 0xccffffff)); break;
-                case player_troop:          color = new Color(0x0077ffff); break;
-                case player_territory:      color = Color.CYAN; break;
-                case opponent:              color = new Color(Integer.reverseBytes(Color.ORANGE.toIntBits() & 0xccffffff)); break;
-                case opponent_troop:        color = Color.RED; break;
-                case opponent_territory:    color = new Color(0xff7777ff); break;
-            }
-
-            if (this.type == Type.player || this.type == Type.opponent) {
-                if (!this.placeable) {
-                    color.set(0x585858bd);
-                }
-            }
-
-            sprite.setColor(color);
+        switch (this.type) {
+            case field:                 color = Color.WHITE; break;
+            case player:                color = new Color(Integer.reverseBytes(Color.YELLOW.toIntBits() & 0xccffffff)); break;
+            case player_troop:          color = new Color(0x0077ffff); break;
+            case player_territory:      color = Color.CYAN; break;
+            case opponent:              color = new Color(Integer.reverseBytes(Color.ORANGE.toIntBits() & 0xccffffff)); break;
+            case opponent_troop:        color = Color.RED; break;
+            case opponent_territory:    color = new Color(0xff7777ff); break;
         }
+
+        if (this.type == Type.player || this.type == Type.opponent) {
+            if (!this.placeable) {
+                color.set(0x585858bd);
+            }
+        }
+
+        sprite.setColor(color);
+    }
 
     public void draw() {
         batch.begin();

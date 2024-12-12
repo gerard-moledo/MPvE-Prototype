@@ -4,6 +4,9 @@ import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.Controllers;
 
 public class Player {
+    enum State { troop_selection, board_selection, board_placement }
+
+    State state;
     Troop troop;
 
     Controller controller;
@@ -11,14 +14,13 @@ public class Player {
     // Movement timing fields
     float move_xt = 0.0f;
     float move_yt = 0.0f;
-    float move_delay = 0.2f;
-    float sensitivity = 0.7f;
+    final float MOVE_DELAY = 0.2f;
+    final float SENSITIVITY = 0.7f;
 
     Player(Cell.Type type, Shape.Type shape) {
-        // Start in appropriate agent's base
-        int q = type == Cell.Type.player ? -Board.field_size - 1 : Board.field_size + 1;
-        int r = type == Cell.Type.player ? Board.field_size / 2 + 1 : -Board.field_size / 2 - 1;
-        troop = new Troop(type, shape, q, r);
+        state = State.troop_selection;
+        troop = Board.selection.get(Board.selection_index);
+        troop.set_enabled(true);
 
         try_connect_controller();
     }
@@ -41,6 +43,103 @@ public class Player {
 
         if (Input_System.buttons.get(controller.getMapping().buttonStart).pressed) {
             GameScreen.start_game();
+            return;
+        }
+
+        if (troop == null) return;
+
+        boolean should_move_x = false;
+        boolean should_move_y = false;
+
+        int place_button_code = troop.cell_type == Cell.Type.player ?
+            controller.getMapping().buttonA : controller.getMapping().buttonDpadDown;
+
+        Input_System.Button place_button = Input_System.buttons.get(place_button_code);
+        if (place_button == null) System.out.println("Button not registered");
+        Input_System.Button back_button = Input_System.buttons.get(controller.getMapping().buttonB);
+
+        //==========================
+        // GATHER AXIS INPUT
+        //==========================
+        float x_input = controller.getAxis(controller.getMapping().axisLeftX);
+        float y_input = controller.getAxis(controller.getMapping().axisLeftY);
+
+        if (Math.abs(x_input) > SENSITIVITY) {
+            move_xt += delta;
+            if (move_xt > MOVE_DELAY) {
+                move_xt -= MOVE_DELAY;
+
+                should_move_x = true;
+            }
+        } else { move_xt = MOVE_DELAY; }
+
+        if (Math.abs(y_input) > SENSITIVITY) {
+            move_yt += delta;
+            if (move_yt > MOVE_DELAY) {
+                move_yt -= MOVE_DELAY;
+
+                should_move_y = true;
+            }
+        } else { move_yt = MOVE_DELAY; }
+        //=====GATHER AXIS INPUT=====
+
+        if (state == State.troop_selection) {
+            if (should_move_x) {
+//                state = State.board_selection;
+//                // Hacky "set position" behavior
+//                troop.q = 0;
+//                troop.r = 0;
+//                troop.move(-Board.field_size - 1, Board.field_size / 2 + 1);
+                troop.set_enabled(false);
+
+                if (Board.selection_index % 2 == 0 && x_input > 0)
+                    Board.selection_index += 1;
+                if (Board.selection_index % 2 == 1 && x_input < 0)
+                    Board.selection_index -= 1;
+                troop = Board.selection.get(Board.selection_index);
+                troop.set_enabled(true);
+            }
+            if (should_move_y) {
+                troop.set_enabled(false);
+
+                int di = (int) Math.signum(y_input) * 2;
+                Board.selection_index = (Board.selection_index + di + Board.selection.size()) % Board.selection.size();
+                troop = Board.selection.get(Board.selection_index);
+                troop.set_enabled(true);
+            }
+
+            // ====================================
+            // TROOP PLACEMENT
+            // ====================================
+            if (place_button != null && place_button.pressed) {
+                troop.set_enabled(false);
+
+                Troop new_troop = new Troop(Cell.Type.player, troop.shape, -6, 4, Cell.CELL_RADIUS);
+                troop = new_troop;
+                state = State.board_selection;
+            }
+        }
+        else if (state == State.board_selection) {
+            if (should_move_x)
+                troop.move((int) Math.signum(x_input), 0);
+            if (should_move_y)
+                troop.move(0, (int) Math.signum(y_input));
+            if (place_button != null && place_button.pressed) {
+                boolean success = troop.place();
+
+                if (success) {
+                    state = State.troop_selection;
+                    Board.selection_index = 0;
+                    troop = Board.selection.get(Board.selection_index);
+                    troop.set_enabled(true);
+                }
+            }
+            if (back_button != null && back_button.pressed) {
+                state = State.troop_selection;
+                Board.selection_index = 0;
+                troop = Board.selection.get(Board.selection_index);
+                troop.set_enabled(true);
+            }
         }
 
         // ==================================
@@ -65,51 +164,38 @@ public class Player {
         // MOVEMENT LOGIC
         // ==================================
 
-        // Modify controls of agent depending on player or opponent
-        int x_axis_code = troop.cell_type == Cell.Type.player ?
-                          controller.getMapping().axisLeftX : controller.getMapping().axisRightX;
-        int y_axis_code = troop.cell_type == Cell.Type.player ?
-                          controller.getMapping().axisLeftY : controller.getMapping().axisRightY;
-
-        float x_input = controller.getAxis(x_axis_code);
-        float y_input = controller.getAxis(y_axis_code);
-
-        if (Math.abs(x_input) > sensitivity) {
-            move_xt += delta;
-            if (move_xt > move_delay) {
-                move_xt -= move_delay;
-
-                troop.move((int) Math.signum(x_input), 0);
-            }
-        } else { move_xt = move_delay; }
-
-
-        if (Math.abs(y_input) > sensitivity) {
-            move_yt += delta;
-            if (move_yt > move_delay) {
-                move_yt -= move_delay;
-
-                troop.move(0, (int) Math.signum(y_input));
-            }
-        } else { move_yt = move_delay; }
-        // ========== MOVEMENT LOGIC ==========
-
-        // ====================================
-        // TROOP PLACEMENT
-        // ====================================
-        int place_button_code = troop.cell_type == Cell.Type.player ?
-                                controller.getMapping().buttonA : controller.getMapping().buttonDpadDown;
-
-        Input_System.Button place_button = Input_System.buttons.get(place_button_code);
-        if (place_button == null) System.out.println("Button not registered");
-
-        if (place_button != null && place_button.pressed) {
-            troop.place();
-        }
+//        // Modify controls of agent depending on player or opponent
+//        int x_axis_code = troop.cell_type == Cell.Type.player ?
+//                          controller.getMapping().axisLeftX : controller.getMapping().axisRightX;
+//        int y_axis_code = troop.cell_type == Cell.Type.player ?
+//                          controller.getMapping().axisLeftY : controller.getMapping().axisRightY;
+//
+//        float x_input = controller.getAxis(x_axis_code);
+//        float y_input = controller.getAxis(y_axis_code);
+//
+//        if (Math.abs(x_input) > SENSITIVITY) {
+//            move_xt += delta;
+//            if (move_xt > MOVE_DELAY) {
+//                move_xt -= MOVE_DELAY;
+//
+//                troop.move((int) Math.signum(x_input), 0);
+//            }
+//        } else { move_xt = MOVE_DELAY; }
+//
+//
+//        if (Math.abs(y_input) > SENSITIVITY) {
+//            move_yt += delta;
+//            if (move_yt > MOVE_DELAY) {
+//                move_yt -= MOVE_DELAY;
+//
+//                troop.move(0, (int) Math.signum(y_input));
+//            }
+//        } else { move_yt = MOVE_DELAY; }
+//        // ========== MOVEMENT LOGIC ==========
 
     }
 
     public void draw() {
-        troop.draw();
+        if (troop != null) troop.draw();
     }
 }

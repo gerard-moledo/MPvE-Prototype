@@ -2,7 +2,7 @@ package com.gmoledo.mpve;
 
 import java.util.EnumMap;
 
-public class Shape {
+final public class Shape {
     enum Type {
         single, pair, line_3, cluster_3, curve_3, line_4, J_4, U_4, hammer_4, cluster_4, Z_4, hazard_4;
 

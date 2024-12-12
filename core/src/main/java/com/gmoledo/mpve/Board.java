@@ -1,5 +1,7 @@
 package com.gmoledo.mpve;
 
+import com.badlogic.gdx.Gdx;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,10 +10,28 @@ final public class Board {
     static int field_size;
     static final int HOME_SIZE = 3;
 
+    static List<Troop> selection;
+    static int selection_index;
+
     static public void Instantiate(int field_size) {
         Board.field_size = field_size;
+        Board.selection_index = 0;
 
         create_board();
+        create_selection();
+    }
+
+    static private void create_selection() {
+        selection = new ArrayList<>();
+        Shape.Type[] shape_types = Shape.SHAPE_MAP.keySet().toArray(new Shape.Type[0]);
+        for (int t = 0; t < Shape.SHAPE_MAP.size(); ++t) {
+            Shape.Type type = shape_types[t];
+            float cell_radius = Cell.CELL_RADIUS / 2.0f;
+            Troop troop_select = new Troop(Cell.Type.player, type, 0, 0, cell_radius);
+            troop_select.set_absolute_position(100 + 3 * 2 * cell_radius * (t % 2), Gdx.graphics.getHeight() - (45 + 4 * 2 * cell_radius * (t / 2)));
+            troop_select.set_enabled(false);
+            selection.add(troop_select);
+        }
     }
 
     static private void create_board() {
@@ -31,7 +51,7 @@ final public class Board {
         for (int q = -field_index; q <= field_index; ++q) { // Generate grid based on qr-coordinates
             for (int r = Math.max(-field_index - q, -field_index); r <= Math.min(field_index - q, field_index); ++r) {
                 // q and r must be converted to positive indices for array access
-                board.get(q + ARRAY_OFFSET).set(r + ARRAY_OFFSET, new Cell(Cell.Type.field, q, r));
+                board.get(q + ARRAY_OFFSET).set(r + ARRAY_OFFSET, new Cell(Cell.Type.field, q, r, 0.0f));
             }
         }
 
@@ -47,7 +67,7 @@ final public class Board {
 
                 // q and r must be converted to positive indices for array access
                 Cell.Type base_type = dq < 0 ? Cell.Type.player_territory : Cell.Type.opponent_territory;
-                board.get(q + ARRAY_OFFSET).set(r + ARRAY_OFFSET, new Cell(base_type, q, r));
+                board.get(q + ARRAY_OFFSET).set(r + ARRAY_OFFSET, new Cell(base_type, q, r, 0.0f));
             }
         }
     }
@@ -69,6 +89,9 @@ final public class Board {
                     cell.draw();
                 }
             }
+        }
+        for (Troop troop_select : selection) {
+            troop_select.draw();
         }
     }
 }

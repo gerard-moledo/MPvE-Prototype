@@ -10,14 +10,19 @@ public class Troop {
     int q;
     int r;
     Vector2 origin;
+
+    float radius;
+
     Shape.Type shape;
     List<Cell> cells;
     Cell.Type cell_type;
 
-    Troop(Cell.Type cell_type, Shape.Type shape, int q, int r) {
+    Troop(Cell.Type cell_type, Shape.Type shape, int q, int r, float radius) {
         origin = Vector2.Zero;
         this.q = q;
         this.r = r;
+
+        this.radius = radius;
 
         this.shape = shape;
         this.cell_type = cell_type;
@@ -42,7 +47,7 @@ public class Troop {
         int[] shape_data = Shape.SHAPE_MAP.get(this.shape);
         List<Cell> new_cells = new ArrayList<>();
         for (int v = 0; v < shape_data.length; v += 2) {
-            new_cells.add(new Cell(this.cell_type, shape_data[v] + q, shape_data[v+1] + r));
+            new_cells.add(new Cell(this.cell_type, shape_data[v] + q, shape_data[v+1] + r, this.radius));
         }
 
         boolean success = check_is_in_bounds(new_cells);
@@ -58,10 +63,28 @@ public class Troop {
         return success;
     }
 
+    public void set_absolute_position(float x, float y) {
+        int[] shape_data = Shape.SHAPE_MAP.get(this.shape);
+        List<Cell> new_cells = new ArrayList<>();
+        for (int v = 0; v < shape_data.length; v += 2) {
+            Cell new_cell = new Cell(this.cell_type, 0, 0, this.radius);
+            int dq = shape_data[v];
+            int dr = shape_data[v + 1];
+            float offset_dr = this.radius * (float) Math.sqrt(3) / 2;
+            float dx = dq * this.radius * 3 / 2;
+            float dy = -dr * this.radius * (float) Math.sqrt(3) + -dq * offset_dr;
+            new_cell.set_absolute_position(x + dx, y + dy);
+            new_cell.change_enabled(false);
+            new_cells.add(new_cell);
+        }
+
+        this.cells = new_cells;
+    }
+
     public void move(int dq, int dr) {
         List<Cell> new_cells = new ArrayList<>();
         for (Cell cell : this.cells) {
-            Cell new_cell = new Cell(this.cell_type, cell.q, cell.r);
+            Cell new_cell = new Cell(this.cell_type, cell.q, cell.r, this.radius);
             new_cell.translate(dq, dr);
             new_cells.add(new_cell);
         }
@@ -79,13 +102,21 @@ public class Troop {
         }
     }
 
-    public void place() {
-        if (check_can_place()) {
+    public void set_enabled(boolean is_enabled) {
+        for (Cell cell : this.cells) {
+            cell.change_enabled(is_enabled);
+        }
+    }
+
+    public boolean place() {
+        boolean success = check_can_place();
+        if (success) {
             for (Cell cell : this.cells) {
                 cell.change_enabled(false);
                 Board.get(cell.q, cell.r).change_type(cell.get_compliment());
             }
         }
+        return success;
     }
 
     public boolean check_can_place() {

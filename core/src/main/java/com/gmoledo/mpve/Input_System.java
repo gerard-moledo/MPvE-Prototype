@@ -32,6 +32,7 @@ final public class Input_System {
             buttons.put(L_TRIGGER, new Button());
             buttons.put(R_TRIGGER, new Button());
             buttons.put(controller.getMapping().buttonA, new Button());
+            buttons.put(controller.getMapping().buttonB, new Button());
             buttons.put(controller.getMapping().buttonDpadDown, new Button());
             buttons.put(controller.getMapping().buttonStart, new Button());
         }
