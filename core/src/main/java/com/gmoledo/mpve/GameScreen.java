@@ -9,7 +9,6 @@ import java.util.Map;
 
 public class GameScreen extends ScreenAdapter {
     static Player player;
-    static Player opponent;
 
     GameScreen() {
         // Controller initialization my fail if no controller is connected
@@ -25,7 +24,6 @@ public class GameScreen extends ScreenAdapter {
         Board.Instantiate(5);
 
         player = new Player(Cell.Type.player, Shape.Type.single);
-        //opponent = new Player(Cell.Type.opponent, Shape.Type.single);
     }
 
     // Main loop
@@ -36,7 +34,6 @@ public class GameScreen extends ScreenAdapter {
 
     public void update(float delta) {
         player.update(delta);
-        //opponent.update(delta);
 
         // Reset per-frame inputs
         for (Map.Entry<Integer, Input_System.Button> button : Input_System.buttons.entrySet()) {
@@ -50,6 +47,5 @@ public class GameScreen extends ScreenAdapter {
 
         Board.draw();
         player.draw();
-        //opponent.draw();
     }
 }
