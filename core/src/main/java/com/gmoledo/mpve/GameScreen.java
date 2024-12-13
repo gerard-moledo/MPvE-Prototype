@@ -11,7 +11,7 @@ public class GameScreen extends ScreenAdapter {
     static Player player;
 
     GameScreen() {
-        // Controller initialization my fail if no controller is connected
+        // Controller initialization may fail if no controller is connected
         boolean success = Input_System.Initialize_Controller(Controllers.getCurrent());
         if (!success) System.out.println("No controller connected.");
 
@@ -23,7 +23,7 @@ public class GameScreen extends ScreenAdapter {
     static public void start_game() {
         Board.Instantiate(5);
 
-        player = new Player(Cell.Type.player, Shape.Type.single);
+        player = new Player();
     }
 
     // Main loop

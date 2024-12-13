@@ -30,57 +30,6 @@ public class Troop {
         update_shape();
     }
 
-    public void toggle_shape(int direction) {
-        boolean success;
-        Shape.Type original_shape = this.shape;
-        do {
-            this.shape = this.shape.toggle_value(direction);
-            success = update_shape();
-
-            if (this.shape == original_shape && !success) break;
-        } while (!success);
-        if (!success) System.out.println("success should not be false; investigate.");
-    }
-
-    public boolean update_shape() {
-        // Use shape_data offsets to place cells of troop
-        int[] shape_data = Shape.SHAPE_MAP.get(this.shape);
-        List<Cell> new_cells = new ArrayList<>();
-        for (int v = 0; v < shape_data.length; v += 2) {
-            new_cells.add(new Cell(this.cell_type, shape_data[v] + q, shape_data[v+1] + r, this.radius));
-        }
-
-        boolean success = check_is_in_bounds(new_cells);
-        if (success) {
-            this.cells = new_cells;
-            if (!check_can_place()) {
-                for (Cell cell : this.cells) {
-                    cell.change_enabled(false);
-                }
-            }
-        }
-
-        return success;
-    }
-
-    public void set_absolute_position(float x, float y) {
-        int[] shape_data = Shape.SHAPE_MAP.get(this.shape);
-        List<Cell> new_cells = new ArrayList<>();
-        for (int v = 0; v < shape_data.length; v += 2) {
-            Cell new_cell = new Cell(this.cell_type, 0, 0, this.radius);
-            int dq = shape_data[v];
-            int dr = shape_data[v + 1];
-            float offset_dr = this.radius * (float) Math.sqrt(3) / 2;
-            float dx = dq * this.radius * 3 / 2;
-            float dy = -dr * this.radius * (float) Math.sqrt(3) + -dq * offset_dr;
-            new_cell.set_absolute_position(x + dx, y + dy);
-            new_cell.change_enabled(false);
-            new_cells.add(new_cell);
-        }
-
-        this.cells = new_cells;
-    }
-
     public void move(int dq, int dr) {
         List<Cell> new_cells = new ArrayList<>();
         for (Cell cell : this.cells) {
@@ -95,16 +44,8 @@ public class Troop {
             this.r += dr;
 
             if (!check_can_place() || !check_is_in_territory()) {
-                for (Cell cell : this.cells) {
-                    cell.change_enabled(false);
-                }
+                set_enabled(false);
             }
-        }
-    }
-
-    public void set_enabled(boolean is_enabled) {
-        for (Cell cell : this.cells) {
-            cell.change_enabled(is_enabled);
         }
     }
 
@@ -119,7 +60,63 @@ public class Troop {
         return success;
     }
 
-    public boolean check_can_place() {
+    public void toggle_shape(int direction) {
+        boolean success;
+        Shape.Type original_shape = this.shape;
+
+        do {
+            this.shape = this.shape.toggle_value(direction);
+            success = update_shape();
+
+            if (this.shape == original_shape && !success) {
+                System.out.println("This shouldn't run; investigate");
+                break;
+            }
+        } while (!success); // Fail if shape would be completely off map
+
+        if (!success) System.out.println("success should not be false; investigate.");
+    }
+
+    private boolean update_shape() {
+        // Use shape_data offsets to place cells of troop
+        int[] shape_data = Shape.SHAPE_MAP.get(this.shape);
+        List<Cell> new_cells = new ArrayList<>();
+        for (int v = 0; v < shape_data.length; v += 2) {
+            new_cells.add(new Cell(this.cell_type, shape_data[v] + q, shape_data[v+1] + r, this.radius));
+        }
+
+        // Only update cells if new_cells is within bounds (not off-grid)
+        boolean success = check_is_in_bounds(new_cells);
+        if (success) {
+            this.cells = new_cells;
+
+            if (!check_can_place()) {
+                for (Cell cell : this.cells) {
+                    cell.change_enabled(false);
+                }
+            }
+        }
+
+        return success;
+    }
+
+    // Restrict movement to board
+    // Only fails if entire troop is off-grid
+    private boolean check_is_in_bounds(List<Cell> cells) {
+        boolean is_move_fail = true;
+        for (Cell cell : cells) {
+            Cell board_cell = Board.get(cell.q, cell.r);
+            if (board_cell != null) {
+                is_move_fail = false;
+                break;
+            }
+        }
+
+        return !is_move_fail;
+    }
+
+    // Fails if a cell is off-grid or if cell is occupied already
+    private boolean check_can_place() {
         boolean is_place_fail = false;
 
         if (!check_is_in_territory()) return is_place_fail;
@@ -132,20 +129,6 @@ public class Troop {
         }
 
         return !is_place_fail;
-    }
-
-    // Restrict movement to board
-    private boolean check_is_in_bounds(List<Cell> cells) {
-        boolean is_move_fail = true;
-        for (Cell cell : cells) {
-            Cell board_cell = Board.get(cell.q, cell.r);
-            if (board_cell != null) {
-                is_move_fail = false;
-                break;
-            }
-        }
-
-        return !is_move_fail;
     }
 
     private boolean check_is_in_territory() {
@@ -180,6 +163,31 @@ public class Troop {
         }
 
         return is_neighboring_territory;
+    }
+
+    // For placing cells off of the board
+    public void set_absolute_position(float x, float y) {
+        int[] shape_data = Shape.SHAPE_MAP.get(this.shape);
+        List<Cell> new_cells = new ArrayList<>();
+        for (int v = 0; v < shape_data.length; v += 2) {
+            Cell new_cell = new Cell(this.cell_type, 0, 0, this.radius);
+            int dq = shape_data[v];
+            int dr = shape_data[v + 1];
+            float offset_dr = this.radius * (float) Math.sqrt(3) / 2;
+            float dx = dq * this.radius * 3 / 2;
+            float dy = -dr * this.radius * (float) Math.sqrt(3) + -dq * offset_dr;
+            new_cell.set_absolute_position(x + dx, y + dy);
+            new_cell.change_enabled(false);
+            new_cells.add(new_cell);
+        }
+
+        this.cells = new_cells;
+    }
+
+    public void set_enabled(boolean is_enabled) {
+        for (Cell cell : this.cells) {
+            cell.change_enabled(is_enabled);
+        }
     }
 
     public void draw() {

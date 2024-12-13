@@ -21,18 +21,6 @@ final public class Board {
         create_selection();
     }
 
-    static private void create_selection() {
-        selection = new ArrayList<>();
-        Shape.Type[] shape_types = Shape.SHAPE_MAP.keySet().toArray(new Shape.Type[0]);
-        for (int t = 0; t < Shape.SHAPE_MAP.size(); ++t) {
-            Shape.Type type = shape_types[t];
-            float cell_radius = Cell.CELL_RADIUS / 2.0f;
-            Troop troop_select = new Troop(Cell.Type.player, type, 0, 0, cell_radius);
-            troop_select.set_absolute_position(100 + 3 * 2 * cell_radius * (t % 2), Gdx.graphics.getHeight() - (45 + 4 * 2 * cell_radius * (t / 2)));
-            troop_select.set_enabled(false);
-            selection.add(troop_select);
-        }
-    }
 
     static private void create_board() {
         // Allocate space for entire board and fill with empty contents
@@ -72,6 +60,18 @@ final public class Board {
         }
     }
 
+    static private void create_selection() {
+        selection = new ArrayList<>();
+        Shape.Type[] shape_types = Shape.SHAPE_MAP.keySet().toArray(new Shape.Type[0]);
+        for (int t = 0; t < Shape.SHAPE_MAP.size(); ++t) {
+            Shape.Type type = shape_types[t];
+            float cell_radius = Cell.CELL_RADIUS / 2.0f;
+            Troop troop_select = new Troop(Cell.Type.player, type, 0, 0, cell_radius);
+            troop_select.set_absolute_position(100 + 3 * 2 * cell_radius * (t % 2), Gdx.graphics.getHeight() - (45 + 4 * 2 * cell_radius * (t / 2)));
+            troop_select.set_enabled(false);
+            selection.add(troop_select);
+        }
+    }
     // Convert raw q and r coordinates to array-accessible coordinates
     static public Cell get(int q, int r) {
         Cell cell = null;

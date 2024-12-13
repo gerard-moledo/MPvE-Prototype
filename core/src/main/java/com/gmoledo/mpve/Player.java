@@ -3,6 +3,9 @@ package com.gmoledo.mpve;
 import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.Controllers;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Player {
     enum State { troop_selection, board_selection, board_placement }
 
@@ -12,12 +15,11 @@ public class Player {
     Controller controller;
 
     // Movement timing fields
-    float move_xt = 0.0f;
-    float move_yt = 0.0f;
+    Map<Integer, Float> move_timing = new HashMap<>();
     final float MOVE_DELAY = 0.2f;
     final float SENSITIVITY = 0.7f;
 
-    Player(Cell.Type type, Shape.Type shape) {
+    Player() {
         state = State.troop_selection;
         troop = Board.selection.get(Board.selection_index);
         troop.set_enabled(true);
@@ -32,10 +34,33 @@ public class Player {
         if (controller == null) {
             success = Input_System.Initialize_Controller(Controllers.getCurrent());
 
-            if (success) controller = Input_System.controller;
+            if (success) {
+                controller = Input_System.controller;
+
+                move_timing.put(controller.getMapping().axisLeftX, 0.0f);
+                move_timing.put(controller.getMapping().axisLeftY, 0.0f);
+            }
         }
 
         return success;
+    }
+
+    public float calculate_axis_input(int axis, float delta) {
+        float calculated_input = 0.0f;
+        float raw_input = controller.getAxis(axis);
+        float move_t = move_timing.get(axis);
+        if (Math.abs(raw_input) > SENSITIVITY) {
+            move_t += delta;
+            if (move_t > MOVE_DELAY) {
+                move_t -= MOVE_DELAY;
+
+                calculated_input = raw_input;
+            }
+        } else { move_t = MOVE_DELAY; }
+
+        move_timing.put(axis, move_t);
+
+        return calculated_input;
     }
 
     public void update(float delta) {
@@ -46,10 +71,8 @@ public class Player {
             return;
         }
 
+        // 12/12: Currently Player requires an active Troop
         if (troop == null) return;
-
-        boolean should_move_x = false;
-        boolean should_move_y = false;
 
         //==========================
         // GATHER INPUT
@@ -57,31 +80,13 @@ public class Player {
         Input_System.Button place_button = Input_System.buttons.get(controller.getMapping().buttonA);
         Input_System.Button back_button = Input_System.buttons.get(controller.getMapping().buttonB);
 
-        float x_input = controller.getAxis(controller.getMapping().axisLeftX);
-        float y_input = controller.getAxis(controller.getMapping().axisLeftY);
-
-        if (Math.abs(x_input) > SENSITIVITY) {
-            move_xt += delta;
-            if (move_xt > MOVE_DELAY) {
-                move_xt -= MOVE_DELAY;
-
-                should_move_x = true;
-            }
-        } else { move_xt = MOVE_DELAY; }
-
-        if (Math.abs(y_input) > SENSITIVITY) {
-            move_yt += delta;
-            if (move_yt > MOVE_DELAY) {
-                move_yt -= MOVE_DELAY;
-
-                should_move_y = true;
-            }
-        } else { move_yt = MOVE_DELAY; }
-
+        float x_input = calculate_axis_input(controller.getMapping().axisLeftX, delta);
+        float y_input = calculate_axis_input(controller.getMapping().axisLeftY, delta);
         //=====GATHER INPUT=====
 
         if (state == State.troop_selection) {
-            if (should_move_x) {
+            // TROOP SELECTION NAVIGATION
+            if (x_input != 0.0f) {
                 troop.set_enabled(false);
 
                 if (Board.selection_index % 2 == 0 && x_input > 0)
@@ -91,7 +96,7 @@ public class Player {
                 troop = Board.selection.get(Board.selection_index);
                 troop.set_enabled(true);
             }
-            if (should_move_y) {
+            if (y_input != 0.0f) {
                 troop.set_enabled(false);
 
                 int di = (int) Math.signum(y_input) * 2;
@@ -100,22 +105,23 @@ public class Player {
                 troop.set_enabled(true);
             }
 
-            // ====================================
-            // TROOP PLACEMENT
-            // ====================================
+            // TROOP SELECTION PLACEMENT
             if (place_button != null && place_button.pressed) {
                 troop.set_enabled(false);
 
                 Troop new_troop = new Troop(Cell.Type.player, troop.shape, -6, 4, Cell.CELL_RADIUS);
                 troop = new_troop;
-                state = State.board_selection;
+                state = State.board_placement;
             }
         }
-        else if (state == State.board_selection) {
-            if (should_move_x)
+        else if (state == State.board_placement) {
+            // BOARD MOVEMENT
+            if (x_input != 0.0f)
                 troop.move((int) Math.signum(x_input), 0);
-            if (should_move_y)
+            if (y_input != 0.0f)
                 troop.move(0, (int) Math.signum(y_input));
+
+            // BOARD PLACEMENT
             if (place_button != null && place_button.pressed) {
                 boolean success = troop.place();
 
@@ -126,6 +132,8 @@ public class Player {
                     troop.set_enabled(true);
                 }
             }
+
+            // BOARD RETURN-TO-SELECTION
             if (back_button != null && back_button.pressed) {
                 state = State.troop_selection;
                 Board.selection_index = 0;
