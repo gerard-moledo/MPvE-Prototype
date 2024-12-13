@@ -99,6 +99,23 @@ public class Cell {
         sprite.setPosition(this.x, this.y);
     }
 
+    public void rotate(int origin_q, int origin_r, int direction) {
+        int dq_start = this.q - origin_q;
+        int dr_start = this.r - origin_r;
+        int dq = dq_start;
+        int dr = dr_start;
+        int ds = -(dq + dr);
+        dq += direction == -1 ? dr_start : ds;
+        dr += direction == -1 ? ds : dq_start;
+        this.q = origin_q + dq;
+        this.r = origin_r + dr;
+
+        Vector2 position = calculate_position(this.q, this.r);
+        this.x = position.x;
+        this.y = position.y;
+        sprite.setPosition(this.x, this.y);
+    }
+
     private Vector2 calculate_position(int q, int r) {
         float offset = CELL_RADIUS * (float) Math.sqrt(3) / 2;
         float x = q * CELL_RADIUS * 3 / 2 + Gdx.graphics.getWidth() / 2f;

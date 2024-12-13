@@ -121,6 +121,16 @@ public class Player {
             if (y_input != 0.0f)
                 troop.move(0, (int) Math.signum(y_input));
 
+            // BOARD TROOP ROTATION
+            Input_System.Button L_button = Input_System.buttons.get(controller.getMapping().buttonL1);
+            Input_System.Button R_button = Input_System.buttons.get(controller.getMapping().buttonR1);
+            if (L_button.pressed) {
+                troop.rotate(-1);
+            }
+            if (R_button.pressed) {
+                troop.rotate(1);
+            }
+
             // BOARD PLACEMENT
             if (place_button != null && place_button.pressed) {
                 boolean success = troop.place();
@@ -141,19 +151,6 @@ public class Player {
                 troop.set_enabled(true);
             }
         }
-
-        // ==================================
-        // SHAPE TOGGLING
-        // ==================================
-        Input_System.Button L_button = Input_System.buttons.get(controller.getMapping().buttonL1);
-        Input_System.Button R_button = Input_System.buttons.get(controller.getMapping().buttonR1);
-        if (L_button.pressed) {
-            troop.toggle_shape(-1);
-        }
-        if (R_button.pressed) {
-            troop.toggle_shape(1);
-        }
-        // ========== SHAPE TOGGLING ==========
     }
 
     public void draw() {

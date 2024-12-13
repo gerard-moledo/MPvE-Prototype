@@ -18,7 +18,7 @@ public class Troop {
     Cell.Type cell_type;
 
     Troop(Cell.Type cell_type, Shape.Type shape, int q, int r, float radius) {
-        origin = Vector2.Zero;
+        this.origin = Vector2.Zero;
         this.q = q;
         this.r = r;
 
@@ -60,21 +60,21 @@ public class Troop {
         return success;
     }
 
-    public void toggle_shape(int direction) {
-        boolean success;
-        Shape.Type original_shape = this.shape;
+    public void rotate(int direction) {
+        List<Cell> new_cells = new ArrayList<>();
+        for (Cell cell : this.cells) {
+            Cell new_cell = new Cell(this.cell_type, cell.q, cell.r, this.radius);
+            new_cell.rotate(this.q, this.r, direction);
+            new_cells.add(new_cell);
+        }
 
-        do {
-            this.shape = this.shape.toggle_value(direction);
-            success = update_shape();
+        if (check_is_in_bounds(new_cells)) {
+            this.cells = new_cells;
 
-            if (this.shape == original_shape && !success) {
-                System.out.println("This shouldn't run; investigate");
-                break;
+            if (!check_can_place() || !check_is_in_territory()) {
+                set_enabled(false);
             }
-        } while (!success); // Fail if shape would be completely off map
-
-        if (!success) System.out.println("success should not be false; investigate.");
+        }
     }
 
     private boolean update_shape() {
