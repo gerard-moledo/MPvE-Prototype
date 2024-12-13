@@ -11,7 +11,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 
 public class Cell {
-    public enum Type { field, player, player_territory, player_troop, opponent, opponent_territory, opponent_troop }
+    public enum Type { field, cursor, player, player_territory, player_troop, opponent, opponent_territory, opponent_troop }
     Type type;
     Type compliment;
 
@@ -140,11 +140,12 @@ public class Cell {
     }
 
     public void change_color() {
-        Color color = Color.BLACK;
+        Color color = Color.PINK;
 
         switch (this.type) {
             case field:                 color = Color.WHITE; break;
-            case player:                color = new Color(Integer.reverseBytes(Color.YELLOW.toIntBits() & 0xccffffff)); break;
+            case cursor:                color = Color.BLACK; break;
+            case player:                color = new Color(Integer.reverseBytes(Color.BLUE.toIntBits() & 0xccffffff)); break;
             case player_troop:          color = new Color(0x0077ffff); break;
             case player_territory:      color = Color.CYAN; break;
             case opponent:              color = new Color(Integer.reverseBytes(Color.ORANGE.toIntBits() & 0xccffffff)); break;

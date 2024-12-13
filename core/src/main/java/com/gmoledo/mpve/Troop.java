@@ -1,7 +1,5 @@
 package com.gmoledo.mpve;
 
-import com.badlogic.gdx.math.Vector2;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,7 +7,6 @@ import java.util.List;
 public class Troop {
     int q;
     int r;
-    Vector2 origin;
 
     float radius;
 
@@ -18,7 +15,6 @@ public class Troop {
     Cell.Type cell_type;
 
     Troop(Cell.Type cell_type, Shape.Type shape, int q, int r, float radius) {
-        this.origin = Vector2.Zero;
         this.q = q;
         this.r = r;
 
@@ -30,6 +26,27 @@ public class Troop {
         update_shape();
     }
 
+    private void update_shape() {
+        // Use shape_data offsets to place cells of troop
+        int[] shape_data = Shape.SHAPE_MAP.get(this.shape);
+        List<Cell> new_cells = new ArrayList<>();
+        for (int v = 0; v < shape_data.length; v += 2) {
+            new_cells.add(new Cell(this.cell_type, shape_data[v] + q, shape_data[v+1] + r, this.radius));
+        }
+
+        // Only update cells if new_cells is within bounds (not off-grid)
+        boolean success = check_is_in_bounds(new_cells);
+        if (success) {
+            this.cells = new_cells;
+
+            if (!check_can_place()) {
+                for (Cell cell : this.cells) {
+                    cell.change_enabled(false);
+                }
+            }
+        }
+    }
+
     public void move(int dq, int dr) {
         List<Cell> new_cells = new ArrayList<>();
         for (Cell cell : this.cells) {
@@ -38,7 +55,7 @@ public class Troop {
             new_cells.add(new_cell);
         }
 
-        if (check_is_in_bounds(new_cells)) {
+        if (Board.get(this.q + dq, this.r + dr) != null) {
             this.cells = new_cells;
             this.q += dq;
             this.r += dr;
@@ -75,29 +92,6 @@ public class Troop {
                 set_enabled(false);
             }
         }
-    }
-
-    private boolean update_shape() {
-        // Use shape_data offsets to place cells of troop
-        int[] shape_data = Shape.SHAPE_MAP.get(this.shape);
-        List<Cell> new_cells = new ArrayList<>();
-        for (int v = 0; v < shape_data.length; v += 2) {
-            new_cells.add(new Cell(this.cell_type, shape_data[v] + q, shape_data[v+1] + r, this.radius));
-        }
-
-        // Only update cells if new_cells is within bounds (not off-grid)
-        boolean success = check_is_in_bounds(new_cells);
-        if (success) {
-            this.cells = new_cells;
-
-            if (!check_can_place()) {
-                for (Cell cell : this.cells) {
-                    cell.change_enabled(false);
-                }
-            }
-        }
-
-        return success;
     }
 
     // Restrict movement to board
