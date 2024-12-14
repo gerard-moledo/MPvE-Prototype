@@ -197,6 +197,12 @@ public class Troop {
         this.cells = new_cells;
     }
 
+    public void set_cell_type(Cell.Type type) {
+        for (Cell cell : this.cells) {
+            cell.change_type(type);
+        }
+    }
+
     public void set_enabled(boolean is_enabled) {
         for (Cell cell : this.cells) {
             cell.change_enabled(is_enabled);

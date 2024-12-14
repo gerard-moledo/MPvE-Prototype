@@ -80,9 +80,6 @@ public class Player {
             return;
         }
 
-        // 12/12: Currently Player requires an active Troop
-        if (active_troop == null) return;
-
         //==========================
         // GATHER INPUT
         //==========================
@@ -97,7 +94,7 @@ public class Player {
         case troop_selection: {
             // TROOP SELECTION NAVIGATION
             if (x_input != 0.0f) {
-                active_troop.set_enabled(false);
+                Board.selection.get(cursor.selection_index).set_enabled(false);
 
                 if (Board.selection_index % 2 == 0 && x_input > 0)
                     Board.selection_index += 1;
@@ -105,26 +102,24 @@ public class Player {
                     Board.selection_index -= 1;
                 cursor.selection_index = Board.selection_index;
 
-                active_troop.set_enabled(false);
-                active_troop = Board.selection.get(cursor.selection_index);
-                active_troop.set_enabled(true);
+                Board.selection.get(cursor.selection_index).set_enabled(true);
             }
             if (y_input != 0.0f) {
+                Board.selection.get(cursor.selection_index).set_enabled(false);
+
                 int di = (int) Math.signum(y_input) * 2;
                 Board.selection_index = (Board.selection_index + di + Board.selection.size()) % Board.selection.size();
-
                 cursor.selection_index = Board.selection_index;
 
-                active_troop.set_enabled(false);
-                active_troop = Board.selection.get(cursor.selection_index);
-                active_troop.set_enabled(true);
+                Board.selection.get(cursor.selection_index).set_enabled(true);
             }
 
             // TROOP SELECTION PLACEMENT
             if (select_button != null && select_button.pressed) {
-                active_troop.set_enabled(false);
+                Troop selected_troop = Board.selection.get(cursor.selection_index);
+                selected_troop.set_enabled(false);
 
-                active_troop = new Troop(Cell.Type.player, active_troop.shape, cursor.q, cursor.r, Cell.CELL_RADIUS);
+                active_troop = new Troop(Cell.Type.player, selected_troop.shape, cursor.q, cursor.r, Cell.CELL_RADIUS);
 
                 state = State.board_placement;
                 this.cursor.highlight.sprite.setColor(Color.BLACK);
@@ -143,22 +138,40 @@ public class Player {
             }
 
             if (select_button.pressed) {
-                if (Board.get(cursor.q, cursor.r).type != Cell.Type.player_troop) {
+                boolean found = false;
+                for (Troop placed_troop : Board.placed_troops) {
+                    for (Cell placed_cell : placed_troop.cells) {
+                        if (placed_cell.q == cursor.q && placed_cell.r == cursor.r) {
+                            Board.placed_troops.remove(placed_troop);
+
+                            state = State.board_placement;
+                            active_troop = placed_troop;
+                            active_troop.q = cursor.q;
+                            active_troop.r = cursor.r;
+                            active_troop.set_enabled(true);
+                            active_troop.set_cell_type(Cell.Type.player);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found) break;
+                }
+                if (!found) {
                     state = State.troop_selection;
+                    Board.selection.get(cursor.selection_index).set_enabled(true);
                     this.cursor.highlight.sprite.setColor(Color.GRAY);
-                    active_troop.set_enabled(true);
                 }
             }
 
             if (back_button != null && back_button.pressed) {
                 state = State.troop_selection;
+                Board.selection.get(cursor.selection_index).set_enabled(true);
                 this.cursor.highlight.sprite.setColor(Color.GRAY);
-
-                active_troop = Board.selection.get(cursor.selection_index);
-                active_troop.set_enabled(true);
             }
         } break;
         case board_placement: {
+            if (active_troop == null) break;
+
             // BOARD MOVEMENT
             if (x_input != 0.0f) {
                 active_troop.move((int) Math.signum(x_input), 0);
@@ -184,21 +197,17 @@ public class Player {
                 boolean success = active_troop.place();
 
                 if (success) {
-                    state = State.troop_selection;
-                    this.cursor.highlight.sprite.setColor(Color.GRAY);
+                    active_troop.set_cell_type(Cell.Type.player_troop);
 
-                    active_troop = Board.selection.get(cursor.selection_index);
-                    active_troop.set_enabled(true);
+                    state = State.board_selection;
+                    active_troop = null;
                 }
             }
 
             // BOARD RETURN-TO-SELECTION
             if (back_button != null && back_button.pressed) {
-                state = State.troop_selection;
-                this.cursor.highlight.sprite.setColor(Color.GRAY);
-
-                active_troop = Board.selection.get(cursor.selection_index);
-                active_troop.set_enabled(true);
+                state = State.board_selection;
+                active_troop = null;
             }
         } break;
         } // switch
