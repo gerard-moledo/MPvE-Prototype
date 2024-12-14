@@ -9,6 +9,7 @@ final public class Board {
     static List<List<Cell>> board;
     static int field_size;
     static final int HOME_SIZE = 3;
+    static List<Troop> placed_troops;
 
     static List<Troop> selection;
     static int selection_index;
@@ -16,6 +17,8 @@ final public class Board {
     static public void Instantiate(int field_size) {
         Board.field_size = field_size;
         Board.selection_index = 0;
+
+        Board.placed_troops = new ArrayList<>();
 
         create_board();
         create_selection();
@@ -83,13 +86,18 @@ final public class Board {
     }
 
     static public void draw() {
-        for (List<Cell> cells : Board.board) {
+        for (List<Cell> cells : board) {
             for (Cell cell : cells) {
                 if (cell != null) {
                     cell.draw();
                 }
             }
         }
+
+        for (Troop placed_troop : placed_troops) {
+            placed_troop.draw();
+        }
+
         for (Troop troop_select : selection) {
             troop_select.draw();
         }

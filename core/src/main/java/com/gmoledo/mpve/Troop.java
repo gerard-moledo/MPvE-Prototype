@@ -69,10 +69,7 @@ public class Troop {
     public boolean place() {
         boolean success = check_can_place();
         if (success) {
-            for (Cell cell : this.cells) {
-                cell.change_enabled(false);
-                Board.get(cell.q, cell.r).change_type(cell.get_compliment());
-            }
+            Board.placed_troops.add(this);
         }
         return success;
     }
@@ -111,24 +108,38 @@ public class Troop {
 
     // Fails if a cell is off-grid or if cell is occupied already
     private boolean check_can_place() {
-        boolean is_place_fail = false;
+        boolean is_success = true;
 
-        if (!check_is_in_territory()) return is_place_fail;
+        if (!check_is_in_territory()) return !is_success;
 
-        for (Cell cell : this.cells) {
-            Cell board_cell = Board.get(cell.q, cell.r);
-            if (board_cell == null || board_cell.type == cell.get_compliment()) {
-                is_place_fail = true;
+        for (Cell troop_cell : this.cells) {
+            if (Board.get(troop_cell.q, troop_cell.r) == null) {
+                is_success = false;
+                break;
             }
         }
 
-        return !is_place_fail;
+        for (Cell troop_cell : this.cells) {
+            for (Troop placed_troop : Board.placed_troops) {
+                for (Cell placed_cell : placed_troop.cells) {
+                    if (troop_cell.q == placed_cell.q && troop_cell.r == placed_cell.r && troop_cell.type == placed_cell.type) {
+                        is_success = false;
+                        break;
+                    }
+
+                    if (!is_success) break;
+                }
+                if (!is_success) break;
+            }
+        }
+
+        return is_success;
     }
 
     private boolean check_is_in_territory() {
         boolean is_out_of_territory = false;
 
-        for (Cell cell : cells) {
+        for (Cell cell : this.cells) {
             boolean is_bordering = check_surrounding_cells(cell);
             if (!is_bordering) {
                 is_out_of_territory = true;
@@ -146,13 +157,21 @@ public class Troop {
             for (int dr = -1; dr <= 1; ++dr) {
                 if (Math.abs(dq + dr) <= 1) {
                     Cell neighbor = Board.get(cell.q + dq, cell.r + dr);
-                    if (neighbor != null && cell.compare_territory(neighbor)) {
+                    if (neighbor != null && neighbor.type == Cell.Type.player_territory) {
                         is_neighboring_territory = true;
-                        break;
                     }
+                    for (Troop placed_troop : Board.placed_troops) {
+                        for (Cell placed_cell : placed_troop.cells) {
+                            if (neighbor != null && placed_cell.q == neighbor.q && placed_cell.r == neighbor.r) {
+                                is_neighboring_territory = true;
+                                break;
+                            }
+                        }
+                        if (is_neighboring_territory) break;
+                    }
+                    if (is_neighboring_territory) break;
                 }
             }
-
             if (is_neighboring_territory) break;
         }
 
