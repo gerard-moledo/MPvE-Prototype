@@ -37,6 +37,7 @@ public class Player {
 
     Cursor cursor;
     Troop active_troop;
+    Troop highlight_troop;
 
     Controller controller;
 
@@ -140,6 +141,24 @@ public class Player {
                 cursor.move(0, (int) Math.signum(y_input));
             }
 
+            if (x_input != 0.0f || y_input != 0.0f) {
+                this.highlight_troop = null;
+                for (Troop placed_troop : Board.placed_troops) {
+                    for (Cell placed_cell : placed_troop.cells) {
+                        if (placed_cell.q == cursor.q && placed_cell.r == cursor.r) {
+                            this.highlight_troop = new Troop(Cell.Type.cursor, placed_troop.shape, 0, 0, Cell.CELL_RADIUS * 0.25f);
+
+                            // 12/14: Simply set highlighted cells absolute position to the placed troop
+                            for (int c = 0; c < highlight_troop.cells.size(); ++c) {
+                                highlight_troop.cells.get(c).set_absolute_position(placed_troop.cells.get(c).x, placed_troop.cells.get(c).y);
+                            }
+                            break;
+                        }
+                    }
+                    if (this.highlight_troop != null) break;
+                }
+            }
+
             if (select_button.pressed) {
                 boolean found = false;
                 for (Troop placed_troop : Board.placed_troops) {
@@ -153,6 +172,8 @@ public class Player {
                             active_troop.r = cursor.r;
                             active_troop.set_enabled(true);
                             active_troop.set_cell_type(Cell.Type.player);
+                            highlight_troop = null;
+
                             found = true;
                             break;
                         }
@@ -236,6 +257,7 @@ public class Player {
 
     public void draw() {
         if (active_troop != null) active_troop.draw();
+        if (highlight_troop != null) highlight_troop.draw();
         cursor.highlight.draw();
     }
 }
