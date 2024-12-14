@@ -122,7 +122,7 @@ public class Troop {
         for (Cell troop_cell : this.cells) {
             for (Troop placed_troop : Board.placed_troops) {
                 for (Cell placed_cell : placed_troop.cells) {
-                    if (troop_cell.q == placed_cell.q && troop_cell.r == placed_cell.r && troop_cell.type == placed_cell.type) {
+                    if (troop_cell.q == placed_cell.q && troop_cell.r == placed_cell.r && troop_cell.compliment == placed_cell.type) {
                         is_success = false;
                         break;
                     }

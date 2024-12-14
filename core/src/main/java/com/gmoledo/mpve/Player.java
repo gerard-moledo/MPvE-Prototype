@@ -117,7 +117,7 @@ public class Player {
             // TROOP SELECTION PLACEMENT
             if (select_button != null && select_button.pressed) {
                 Troop selected_troop = Board.selection.get(cursor.selection_index);
-                selected_troop.set_enabled(false);
+                selected_troop.set_cell_type(Cell.Type.player_troop);
 
                 active_troop = new Troop(Cell.Type.player, selected_troop.shape, cursor.q, cursor.r, Cell.CELL_RADIUS);
 
@@ -125,6 +125,9 @@ public class Player {
                 this.cursor.highlight.sprite.setColor(Color.BLACK);
             }
             if (back_button != null && back_button.pressed) {
+                Troop selected_troop = Board.selection.get(cursor.selection_index);
+                selected_troop.set_cell_type(Cell.Type.player_troop);
+
                 state = State.board_selection;
                 this.cursor.highlight.sprite.setColor(Color.BLACK);
             }
@@ -158,14 +161,14 @@ public class Player {
                 }
                 if (!found) {
                     state = State.troop_selection;
-                    Board.selection.get(cursor.selection_index).set_enabled(true);
+                    Board.selection.get(cursor.selection_index).set_cell_type(Cell.Type.player);
                     this.cursor.highlight.sprite.setColor(Color.GRAY);
                 }
             }
 
             if (back_button != null && back_button.pressed) {
                 state = State.troop_selection;
-                Board.selection.get(cursor.selection_index).set_enabled(true);
+                Board.selection.get(cursor.selection_index).set_cell_type(Cell.Type.player);
                 this.cursor.highlight.sprite.setColor(Color.GRAY);
             }
         } break;
